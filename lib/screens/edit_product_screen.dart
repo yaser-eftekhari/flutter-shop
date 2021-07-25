@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../providers/product.dart';
+
 class EditProductScreen extends StatefulWidget {
   static const routeName = "/editProduct";
   @override
@@ -11,6 +13,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final _descriptionFocusNode = FocusNode();
   final _imageUrlFocusNode = FocusNode();
   final _imageUrlController = TextEditingController();
+  final _form = GlobalKey<FormState>();
+
+  var _editedProduct =
+      Product(imageUrl: "", description: "", title: "", price: 0, id: "");
 
   void _updateImageUrl() {
     if (!_imageUrlFocusNode.hasFocus) {
@@ -34,15 +40,29 @@ class _EditProductScreenState extends State<EditProductScreen> {
     super.dispose();
   }
 
+  void _saveForm() {
+    final isValid = _form.currentState!.validate();
+    if (isValid) {
+      _form.currentState!.save();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Edit Product"),
+        actions: [
+          IconButton(
+            onPressed: _saveForm,
+            icon: Icon(Icons.save),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
+          key: _form,
           child: SingleChildScrollView(
             child: Column(
               children: [
@@ -53,6 +73,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   textInputAction: TextInputAction.next,
                   onFieldSubmitted: (_) {
                     FocusScope.of(context).requestFocus(_priceFocusNode);
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return "Title cannot be null";
+                    }
+                    if (value.isEmpty) {
+                      return "Title cannot be empty";
+                    }
+                    // if no error found, return null that means validation passed
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _editedProduct = Product(
+                      imageUrl: _editedProduct.imageUrl,
+                      description: _editedProduct.description,
+                      title: value == null ? "" : value,
+                      price: _editedProduct.price,
+                      id: _editedProduct.id,
+                    );
                   },
                 ),
                 TextFormField(
@@ -65,6 +104,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   onFieldSubmitted: (_) {
                     FocusScope.of(context).requestFocus(_descriptionFocusNode);
                   },
+                  validator: (value) {
+                    if (value == null) {
+                      return "Price cannot be null";
+                    }
+                    if (value.isEmpty) {
+                      return "Price cannot be empty";
+                    }
+                    // if no error found, return null that means validation passed
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _editedProduct = Product(
+                      imageUrl: _editedProduct.imageUrl,
+                      description: _editedProduct.description,
+                      title: _editedProduct.title,
+                      price: double.parse(value == null ? "0" : value),
+                      id: _editedProduct.id,
+                    );
+                  },
                 ),
                 TextFormField(
                   decoration: InputDecoration(
@@ -73,6 +131,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   maxLines: 3,
                   keyboardType: TextInputType.multiline,
                   focusNode: _descriptionFocusNode,
+                  validator: (value) {
+                    if (value == null) {
+                      return "Description cannot be null";
+                    }
+                    if (value.isEmpty) {
+                      return "Description cannot be empty";
+                    }
+                    // if no error found, return null that means validation passed
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _editedProduct = Product(
+                      imageUrl: _editedProduct.imageUrl,
+                      description: value == null ? "" : value,
+                      title: _editedProduct.title,
+                      price: _editedProduct.price,
+                      id: _editedProduct.id,
+                    );
+                  },
                 ),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -110,6 +187,26 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         controller: _imageUrlController,
                         onEditingComplete: () {
                           setState(() {});
+                        },
+                        onFieldSubmitted: (_) => _saveForm(),
+                        validator: (value) {
+                          if (value == null) {
+                            return "URL cannot be null";
+                          }
+                          if (value.isEmpty) {
+                            return "URL cannot be empty";
+                          }
+                          // if no error found, return null that means validation passed
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _editedProduct = Product(
+                            imageUrl: value == null ? "" : value,
+                            description: _editedProduct.description,
+                            title: _editedProduct.title,
+                            price: _editedProduct.price,
+                            id: _editedProduct.id,
+                          );
                         },
                       ),
                     ),
