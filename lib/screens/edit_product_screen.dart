@@ -111,6 +111,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     if (value.isEmpty) {
                       return "Price cannot be empty";
                     }
+                    if(double.tryParse(value) == null) {
+                      return "Please enter a valid price";
+                    }
+                    if(double.parse(value) <= 0) {
+                      return "Please enter a positive price";
+                    }
                     // if no error found, return null that means validation passed
                     return null;
                   },
@@ -196,6 +202,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           if (value.isEmpty) {
                             return "URL cannot be empty";
                           }
+                          if(!value.toLowerCase().startsWith("http") && !value.toLowerCase().startsWith("https"))
+                            {
+                              return "Please enter a valid URL";
+                            }
                           // if no error found, return null that means validation passed
                           return null;
                         },
