@@ -20,6 +20,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
   var _editedProduct =
       Product(imageUrl: "", description: "", title: "", price: 0, id: "");
 
+  var _isInit = true;
+
+  var _initValues = {
+    "title": "",
+    "description": "",
+    "price": "",
+    "url": "",
+  };
+
   void _updateImageUrl() {
     if (!_imageUrlFocusNode.hasFocus) {
       setState(() {});
@@ -30,6 +39,27 @@ class _EditProductScreenState extends State<EditProductScreen> {
   void initState() {
     _imageUrlFocusNode.addListener(_updateImageUrl);
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    if (_isInit) {
+      final productId = ModalRoute.of(context)!.settings.arguments as String;
+      if (productId != null) {
+        _editedProduct = Provider.of<ProductsProvider>(context, listen: false)
+            .findById(productId);
+        _initValues = {
+          "title": _editedProduct.title,
+          "description": _editedProduct.description,
+          "price": _editedProduct.price.toString(),
+          // "url": _editedProduct.description,
+          "url": "",
+        };
+        _imageUrlController.text = _editedProduct.imageUrl;
+      }
+    }
+    _isInit = false;
+    super.didChangeDependencies();
   }
 
   @override
@@ -46,7 +76,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
     final isValid = _form.currentState!.validate();
     if (isValid) {
       _form.currentState!.save();
-      Provider.of<ProductsProvider>(context, listen: false).addProduct(_editedProduct);
+      Provider.of<ProductsProvider>(context, listen: false)
+          .addProduct(_editedProduct);
       Navigator.pop(context);
     }
   }
@@ -78,6 +109,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   onFieldSubmitted: (_) {
                     FocusScope.of(context).requestFocus(_priceFocusNode);
                   },
+                  initialValue: _initValues["title"],
                   validator: (value) {
                     if (value == null) {
                       return "Title cannot be null";
@@ -108,6 +140,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   onFieldSubmitted: (_) {
                     FocusScope.of(context).requestFocus(_descriptionFocusNode);
                   },
+                  initialValue: _initValues["price"],
                   validator: (value) {
                     if (value == null) {
                       return "Price cannot be null";
@@ -115,10 +148,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     if (value.isEmpty) {
                       return "Price cannot be empty";
                     }
-                    if(double.tryParse(value) == null) {
+                    if (double.tryParse(value) == null) {
                       return "Please enter a valid price";
                     }
-                    if(double.parse(value) <= 0) {
+                    if (double.parse(value) <= 0) {
                       return "Please enter a positive price";
                     }
                     // if no error found, return null that means validation passed
@@ -141,6 +174,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   maxLines: 3,
                   keyboardType: TextInputType.multiline,
                   focusNode: _descriptionFocusNode,
+                  initialValue: _initValues["description"],
                   validator: (value) {
                     if (value == null) {
                       return "Description cannot be null";
@@ -199,6 +233,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           setState(() {});
                         },
                         onFieldSubmitted: (_) => _saveForm(),
+                        // initialValue: _initValues["url"],
                         validator: (value) {
                           if (value == null) {
                             return "URL cannot be null";
@@ -206,10 +241,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           if (value.isEmpty) {
                             return "URL cannot be empty";
                           }
-                          if(!value.toLowerCase().startsWith("http") && !value.toLowerCase().startsWith("https"))
-                            {
-                              return "Please enter a valid URL";
-                            }
+                          if (!value.toLowerCase().startsWith("http") &&
+                              !value.toLowerCase().startsWith("https")) {
+                            return "Please enter a valid URL";
+                          }
                           // if no error found, return null that means validation passed
                           return null;
                         },
