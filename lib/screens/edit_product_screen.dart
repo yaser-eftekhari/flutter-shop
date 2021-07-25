@@ -76,8 +76,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
     final isValid = _form.currentState!.validate();
     if (isValid) {
       _form.currentState!.save();
-      Provider.of<ProductsProvider>(context, listen: false)
-          .addProduct(_editedProduct);
+      if(_editedProduct.id.isEmpty) {
+        Provider.of<ProductsProvider>(context, listen: false)
+            .addProduct(_editedProduct);
+      } else {
+        Provider.of<ProductsProvider>(context, listen: false).updateProduct(_editedProduct.id, _editedProduct);
+      }
       Navigator.pop(context);
     }
   }
