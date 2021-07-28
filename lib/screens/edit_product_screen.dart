@@ -21,6 +21,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       Product(imageUrl: "", description: "", title: "", price: 0, id: "");
 
   var _isInit = true;
+  var _isLoading = false;
 
   var _initValues = {
     "title": "",
@@ -44,10 +45,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      final productId = ModalRoute.of(context)!.settings.arguments as String;
+      final productId = ModalRoute.of(context)!.settings.arguments;
       if (productId != null) {
         _editedProduct = Provider.of<ProductsProvider>(context, listen: false)
-            .findById(productId);
+            .findById(productId as String);
         _initValues = {
           "title": _editedProduct.title,
           "description": _editedProduct.description,
@@ -76,13 +77,24 @@ class _EditProductScreenState extends State<EditProductScreen> {
     final isValid = _form.currentState!.validate();
     if (isValid) {
       _form.currentState!.save();
+      setState(() {
+        _isLoading = true;
+      });
       if(_editedProduct.id.isEmpty) {
         Provider.of<ProductsProvider>(context, listen: false)
-            .addProduct(_editedProduct);
+            .addProduct(_editedProduct).then((_) {
+              setState(() {
+                _isLoading = false;
+              });
+          Navigator.pop(context);
+        });
       } else {
         Provider.of<ProductsProvider>(context, listen: false).updateProduct(_editedProduct.id, _editedProduct);
+        setState(() {
+          _isLoading = false;
+        });
+        Navigator.pop(context);
       }
-      Navigator.pop(context);
     }
   }
 
@@ -98,7 +110,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
           ),
         ],
       ),
-      body: Padding(
+      body: _isLoading? Center(child: CircularProgressIndicator(),) : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _form,

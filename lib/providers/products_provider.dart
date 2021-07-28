@@ -53,10 +53,10 @@ class ProductsProvider with ChangeNotifier {
     return _items.firstWhere((element) => element.id == id);
   }
 
-  void addProduct(Product product) {
-    const path = "https://flutter-sample-store-default-rtdb.firebaseio.com";
+  Future<void> addProduct(Product product) {
+    const path = "flutter-sample-store-default-rtdb.firebaseio.com";
     final url = Uri.https(path, "/products.json");
-    http.post(url, body: json.encode({
+    return http.post(url, body: json.encode({
       'title': product.title,
       'description': product.description,
       'imageUrl': product.imageUrl,
