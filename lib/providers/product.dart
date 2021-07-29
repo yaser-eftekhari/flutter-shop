@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
-class Product with ChangeNotifier{
+import 'dart:convert';
+
+class Product with ChangeNotifier {
   final String id;
   final String imageUrl;
   final String description;
@@ -17,8 +20,30 @@ class Product with ChangeNotifier{
     this.isFavorite = false,
   });
 
-  void toggleFavoriteState() {
+  void _rollback(bool variable, bool oldStatus) {
+    variable = oldStatus;
+    notifyListeners();
+  }
+
+  Future<void> toggleFavoriteState() async {
+    const path = "flutter-sample-store-default-rtdb.firebaseio.com";
+    final url = Uri.https(path, "/products/$id.json");
+
+    final oldStatus = isFavorite;
     isFavorite = !isFavorite;
     notifyListeners();
+    try {
+      final response = await http.patch(
+        url,
+        body: json.encode({
+          'isFavorite': isFavorite,
+        }),
+      );
+      if(response.statusCode >= 400) {
+        _rollback(isFavorite, oldStatus);
+      }
+    } catch (error) {
+      _rollback(isFavorite, oldStatus);
+    }
   }
 }
