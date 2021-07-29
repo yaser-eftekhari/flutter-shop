@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 
 import 'dart:convert';
 
+import '../models/http_exception.dart';
+
 import 'product.dart';
 
 class ProductsProvider with ChangeNotifier {
@@ -122,8 +124,19 @@ class ProductsProvider with ChangeNotifier {
     }
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((element) => element.id == id);
+  Future<void> deleteProduct(String id) async {
+    const path = "flutter-sample-store-default-rtdb.firebaseio.com";
+    final url = Uri.https(path, "/products/$id.json");
+    final existingProdIndex = _items.indexWhere((element) => element.id == id);
+    var existingProd = _items[existingProdIndex];
+    _items.removeAt(existingProdIndex);
     notifyListeners();
+    final response = await http.delete(url);
+      if(response.statusCode >= 400) {
+        _items.insert(existingProdIndex, existingProd);
+        notifyListeners();
+        throw HttpException("Deleting failed on the server");
+      }
+      // existingProd = null;
   }
 }
