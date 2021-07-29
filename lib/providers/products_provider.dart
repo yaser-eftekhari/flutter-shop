@@ -104,9 +104,19 @@ class ProductsProvider with ChangeNotifier {
     }
   }
 
-  void updateProduct(String id, Product product) {
+  Future<void> updateProduct(String id, Product product) async {
+    const path = "flutter-sample-store-default-rtdb.firebaseio.com";
+    final url = Uri.https(path, "/products/$id.json");
     final prodIndex = _items.indexWhere((element) => element.id == id);
     if (prodIndex >= 0) {
+      await http.patch(url,
+          body: json.encode({
+            'title': product.title,
+            'description': product.description,
+            'imageUrl': product.imageUrl,
+            'price': product.price,
+            'isFavorite': product.isFavorite,
+          }));
       _items[prodIndex] = product;
       notifyListeners();
     }
