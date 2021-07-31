@@ -43,6 +43,10 @@ class ProductsProvider with ChangeNotifier {
     // ),
   ];
 
+  final String? authToken;
+
+  ProductsProvider(this.authToken, this._items);
+
   List<Product> get items {
     return [..._items];
   }
@@ -57,7 +61,7 @@ class ProductsProvider with ChangeNotifier {
 
   Future<void> addProduct(Product product) {
     const path = "flutter-sample-store-default-rtdb.firebaseio.com";
-    final url = Uri.https(path, "/products.json");
+    final url = Uri.https(path, "/products.json?auth=$authToken");
     return http
         .post(url,
             body: json.encode({
@@ -84,7 +88,7 @@ class ProductsProvider with ChangeNotifier {
 
   Future<void> fetchAndSetProducts() async {
     const path = "flutter-sample-store-default-rtdb.firebaseio.com";
-    final url = Uri.https(path, "/products.json");
+    final url = Uri.https(path, "/products.json?auth=$authToken");
     try {
       final List<Product> loadedProducts = [];
       final response = await http.get(url);
@@ -109,7 +113,7 @@ class ProductsProvider with ChangeNotifier {
 
   Future<void> updateProduct(String id, Product product) async {
     const path = "flutter-sample-store-default-rtdb.firebaseio.com";
-    final url = Uri.https(path, "/products/$id.json");
+    final url = Uri.https(path, "/products/$id.json?auth=$authToken");
     final prodIndex = _items.indexWhere((element) => element.id == id);
     if (prodIndex >= 0) {
       await http.patch(url,
@@ -127,7 +131,7 @@ class ProductsProvider with ChangeNotifier {
 
   Future<void> deleteProduct(String id) async {
     const path = "flutter-sample-store-default-rtdb.firebaseio.com";
-    final url = Uri.https(path, "/products/$id.json");
+    final url = Uri.https(path, "/products/$id.json?auth=$authToken");
     final existingProdIndex = _items.indexWhere((element) => element.id == id);
     var existingProd = _items[existingProdIndex];
     _items.removeAt(existingProdIndex);
