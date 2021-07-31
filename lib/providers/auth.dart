@@ -6,11 +6,25 @@ import '../models/http_exception.dart';
 import 'dart:convert';
 
 class Auth with ChangeNotifier {
-  String _token = "";
-  DateTime _expiry = DateTime.now();
-  String _userId = "";
+  String? _token;
+  DateTime? _expiry;
+  String? _userId;
 
-  Future<void> _authenticate(String email, String password, String segment) async {
+  bool get isAuthenticated {
+    return token != null;
+  }
+
+  String? get token {
+    if (_expiry != null) {
+      if (_token != null && _expiry!.isAfter(DateTime.now())) {
+        return _token;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _authenticate(
+      String email, String password, String segment) async {
     final url = Uri.parse(
         "https://identitytoolkit.googleapis.com/v1/accounts:$segment?key=AIzaSyBr_qnfLDStUxZUzF-nnSEhonJ8GPnIFWg");
 
@@ -23,10 +37,18 @@ class Auth with ChangeNotifier {
           }));
 
       final responseData = json.decode(response.body);
-      if(responseData['error'] != null) {
+      if (responseData['error'] != null) {
         throw HttpException(responseData['error']['message']);
       }
-    } catch(error) {
+      _token = responseData["idToken"];
+      _userId = responseData["localId"];
+      _expiry = DateTime.now().add(
+        Duration(
+          seconds: int.parse(responseData["expiresIn"]),
+        ),
+      );
+      notifyListeners();
+    } catch (error) {
       throw error;
     }
   }
