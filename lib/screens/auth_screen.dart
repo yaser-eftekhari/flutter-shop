@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth.dart';
 
+import '../models/http_exception.dart';
+
 enum AuthMode { Signup, Login }
 
 class AuthScreen extends StatelessWidget {
@@ -103,6 +105,22 @@ class _AuthCardState extends State<AuthCard> {
   var _isLoading = false;
   final _passwordController = TextEditingController();
 
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("An error occured"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       // Invalid!
@@ -112,12 +130,30 @@ class _AuthCardState extends State<AuthCard> {
     setState(() {
       _isLoading = true;
     });
-    if (_authMode == AuthMode.Login) {
-      // Log user in
-    } else {
-      // Sign user up
-      await Provider.of<Auth>(context, listen: false)
-          .signup(_authData["email"]!, _authData["password"]!);
+    try {
+      if (_authMode == AuthMode.Login) {
+        // Log user in
+        await Provider.of<Auth>(context, listen: false)
+            .signin(_authData["email"]!, _authData["password"]!);
+      } else {
+        // Sign user up
+        await Provider.of<Auth>(context, listen: false)
+            .signup(_authData["email"]!, _authData["password"]!);
+      }
+    } on HttpException catch (error) {
+      var errorMessage = error.message;
+      if (error.message.contains("EMAIL_EXISTS")) {
+        errorMessage =
+            "The email address already exists in the system. Try logging in";
+      } else if (error.message.contains("EMAIL_NOT_FOUND")) {
+        errorMessage = "The email address does not exist in the system";
+      } else if (error.message.contains("INVALID_PASSWORD")) {
+        errorMessage = "The email and password do not match our records";
+      }
+      _showErrorDialog(errorMessage);
+    } catch (error) {
+      const errorMessage = "Could not authenticate. Please try again later.";
+      _showErrorDialog(errorMessage);
     }
     setState(() {
       _isLoading = false;
